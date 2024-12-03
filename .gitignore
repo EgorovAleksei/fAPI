@@ -1,0 +1,20 @@
+.env
+.idea
+
+!/.env
+
+#python stuff
+venv/
+.pylintrc
+__pycache__/
+cache/
+
+
+#ide stuff
+.vscode
+
+#django stuff
+db.sqlite3
+media/
+/.env
+/.gitignore

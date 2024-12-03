@@ -9,7 +9,8 @@ readme = "README.md"
 [tool.poetry.dependencies]
 python = "3.13"
 fastapi = "^0.115.5"
-unicorn = {extras = ["standard"], version = "^2.1.1"}
+uvicorn = {extras = ["standard"], version = "^0.32.1"}
+pydantic = {extras = ["email"], version = "^2.10.2"}
 
 [tool.poetry.group.dev.dependencies]
 pytest = "^8.3.4"
