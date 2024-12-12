@@ -1,8 +1,7 @@
-from typing import Annotated
-from pydantic import BaseModel, EmailStr
 from fastapi import APIRouter
-from users.schemas import CreateUser
+
 from users import crud
+from users.schemas import CreateUser
 
 router = APIRouter(prefix="/users", tags=["Users"])
 

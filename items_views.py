@@ -7,7 +7,11 @@ router = APIRouter(prefix="/items", tags=["Items"])
 
 @router.get("/")
 def list_items():
-    return {"items": [{"id": "1", "label": "Item 1"}, ]}
+    return {
+        "items": [
+            {"id": "1", "label": "Item 1"},
+        ]
+    }
 
 
 @router.get("/latest")
