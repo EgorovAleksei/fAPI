@@ -38,4 +38,4 @@ class DBEngine:
         await session.close()
 
 
-db = DBEngine(url=settings.db_url, echo=settings.db_echo)
+db = DBEngine(url=settings.db.url, echo=settings.db.echo)

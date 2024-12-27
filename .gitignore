@@ -17,4 +17,9 @@ cache/
 db.sqlite3
 media/
 /.env
-/.gitignore
+/.gitignore!/certs/
+!/certs/jwt-private.pem
+!/certs/
+!/certs/jws-public.pem
+jwt-private.pem
+jws-public.pem
