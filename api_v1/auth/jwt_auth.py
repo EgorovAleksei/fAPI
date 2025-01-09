@@ -2,23 +2,30 @@ from fastapi import APIRouter, Depends, Form, HTTPException, status
 from pydantic import BaseModel
 from fastapi.security import (
     HTTPBearer,
-    OAuth2PasswordBearer,
 )
 
-from api_v1.auth.helpers import create_access_token, create_refresh_token
+from api_v1.auth.helpers import (
+    create_access_token,
+    create_refresh_token,
+    REFRESH_TOKEN_TYPE,
+)
+from api_v1.auth.validation import (
+    get_auth_user_rom_token_of_type,
+    get_current_auth_user,
+    get_current_auth_user_for_refresh,
+    get_current_token_payload,
+    UserGetterFromToken,
+)
+from api_v1.auth.crud import users_db
 from auth import utils as auth_utils
 from users.schemas import UserSchema
-from jwt.exceptions import InvalidTokenError
 
 http_bearer = HTTPBearer(auto_error=False)
-oauth2_scheme = OAuth2PasswordBearer(
-    tokenUrl="/api/v1/auth/jwt/login",
-)
 
 
 class TokenInfo(BaseModel):
     access_token: str
-    refresh_token: str
+    refresh_token: str | None = None
     token_type: str = "Bearer"
 
 
@@ -27,22 +34,6 @@ router = APIRouter(
     tags=["JWT"],
     dependencies=[Depends(http_bearer)],
 )
-
-john = UserSchema(
-    username="john",
-    password=auth_utils.hash_password("qwerty"),
-    email="john@dd.ru",
-)
-
-sam = UserSchema(
-    username="sam",
-    password=auth_utils.hash_password("secret"),
-)
-
-users_db: dict[str, UserSchema] = {
-    john.username: john,
-    sam.username: sam,
-}
 
 
 async def validate_auth_user(
@@ -70,33 +61,6 @@ async def validate_auth_user(
     return user
 
 
-async def get_current_token_payload(
-    # credentials: HTTPAuthorizationCredentials = Depends(http_bearer),
-    token: str = Depends(oauth2_scheme),
-) -> UserSchema:
-    # token = credentials.credentials
-    try:
-        payload = auth_utils.decode_jwt(token=token)
-    except InvalidTokenError as e:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail=f"Unauthorized {e}",
-        )
-    return payload
-
-
-async def get_current_auth_user(
-    payload: dict = Depends(get_current_token_payload),
-) -> UserSchema:
-    username: str | None = payload.get("sub")
-    if user := users_db.get(username):
-        return user
-    raise HTTPException(
-        status_code=status.HTTP_401_UNAUTHORIZED,
-        detail="Unauthorized",
-    )
-
-
 async def get_current_active_auth_user(
     user: UserSchema = Depends(get_current_auth_user),
 ):
@@ -117,6 +81,22 @@ async def auth_user_issue_jwt(
     return TokenInfo(
         access_token=access_token,
         refresh_token=refresh_token,
+    )
+
+
+@router.post(
+    "/refresh",
+    response_model=TokenInfo,
+    response_model_exclude_none=True,
+)
+async def auth_refresh_jwt(
+    # user: UserSchema = Depends(get_current_auth_user_for_refresh),
+    # user: UserSchema = Depends(get_auth_user_rom_token_of_type(REFRESH_TOKEN_TYPE)),
+    user: UserSchema = Depends(UserGetterFromToken(REFRESH_TOKEN_TYPE)),
+):
+    access_token = create_access_token(user)
+    return TokenInfo(
+        access_token=access_token,
     )
 
 
