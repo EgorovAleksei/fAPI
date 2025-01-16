@@ -1,4 +1,4 @@
-from fastapi import Depends, HTTPException
+from fastapi import Depends, Form, HTTPException
 from fastapi.security import OAuth2PasswordBearer
 from jwt import InvalidTokenError
 from starlette import status
@@ -72,3 +72,39 @@ class UserGetterFromToken:
 
 get_current_auth_user = get_auth_user_rom_token_of_type(ACCESS_TOKEN_TYPE)
 get_current_auth_user_for_refresh = UserGetterFromToken(REFRESH_TOKEN_TYPE)
+
+
+async def get_current_active_auth_user(
+    user: UserSchema = Depends(get_current_auth_user),
+):
+    if user.active:
+        return user
+    raise HTTPException(
+        status_code=status.HTTP_403_FORBIDDEN,
+        detail="user inactive",
+    )
+
+
+async def validate_auth_user(
+    username: str = Form(),
+    password: str = Form(),
+):
+    unauthed_exc = HTTPException(
+        status_code=status.HTTP_401_UNAUTHORIZED,
+        detail="Unauthorized",
+    )
+    if not (user := users_db.get(username)):
+        raise unauthed_exc
+    if not (
+        auth_utils.validate_password(
+            password=password,
+            hashed_password=user.password,
+        )
+    ):
+        raise unauthed_exc
+    if not user.active:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Inactive user",
+        )
+    return user
