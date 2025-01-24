@@ -19,6 +19,7 @@ pyjwt = {extras = ["crypto"], version = "^2.10.1"}
 bcrypt = "^4.2.1"
 python-multipart = "^0.0.20"
 orjson = "^3.10.15"
+fastapi-users = {extras = ["sqlalchemy"], version = "^14.0.1"}
 
 [tool.poetry.group.dev.dependencies]
 pytest = "^8.3.4"
